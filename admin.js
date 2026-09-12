@@ -1,0 +1,8 @@
+let settings={};const $=id=>document.getElementById(id);
+$("login").onclick=login;$("save").onclick=save;$("clear").onclick=clearAll;
+async function login(){const r=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("password").value})}),d=await r.json();if(!r.ok)return $("loginMsg").textContent=d.error; $("auth").classList.add("hide");$("panel").classList.remove("hide");load()}
+async function load(){let [s,t,b]=await Promise.all([fetch("/api/settings"),fetch("/api/admin/stats"),fetch("/api/admin/scores")]);settings=await s.json();const st=await t.json();$("players").textContent=st.players;$("scores").textContent=st.scores;$("top").textContent=st.top;for(const k of Object.keys(settings)){const e=$(k);if(e)e.value=settings[k]}$("table").innerHTML=(await b.json()).map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.difficulty}</td><td>${x.attempts}</td><td><button onclick="del(${x.id})">Hapus</button></td></tr>`).join("")}
+async function save(){const data={};for(const k of Object.keys(settings)){const e=$(k);if(e)data[k]=e.value}const r=await fetch("/api/admin/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(r.ok)alert("Pengaturan tersimpan");else alert("Gagal menyimpan")}
+async function del(id){if(!confirm("Hapus skor ini?"))return;await fetch("/api/admin/scores/"+id,{method:"DELETE"});load()}
+async function clearAll(){if(!confirm("Hapus SEMUA leaderboard?"))return;await fetch("/api/admin/scores",{method:"DELETE"});load()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
